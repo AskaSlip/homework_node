@@ -1,53 +1,25 @@
-import { ApiError } from "../errors/api.errors";
 import { IUser } from "../interfaces/user.interface";
-import { read, write } from "../services/fs.services";
+import { User } from "../models/user.model";
 
 class UserRepository {
   public async getList(): Promise<IUser[]> {
-    return await read();
+    return await User.find({});
   }
 
   public async create(dto: Partial<IUser>): Promise<IUser> {
-    const users = await read();
-    const newUser = {
-      id: users.length ? users[users.length - 1]?.id + 1 : 1,
-      name: dto.name,
-      email: dto.email,
-      password: dto.password,
-    };
-    users.push(newUser);
-
-    await write(users);
-    return newUser;
-  }
-  public async getById(userId: number): Promise<IUser | null> {
-    const users = await read();
-    return users.find((user) => user.id === userId);
+    return await User.create(dto);
   }
 
-  public async update(userId: number, dto: IUser): Promise<IUser> {
-    const users = await read();
-
-    const userIndex = users.findIndex((user) => user.id === userId);
-    if (userIndex === -1) {
-      throw new ApiError("User not found", 404);
-    }
-    users[userIndex].name = dto.name;
-    users[userIndex].email = dto.email;
-    users[userIndex].password = dto.password;
-
-    await write(users);
-
-    return users[userIndex];
+  public async getById(userId: string): Promise<IUser | null> {
+    return await User.findById(userId);
   }
-  public async delete(userId: number): Promise<void> {
-    const users = await read();
-    const userIndex = users.findIndex((user) => user.id === userId);
-    if (userIndex === -1) {
-      throw new ApiError("User not found", 404);
-    }
-    users.splice(userIndex, 1);
-    await write(users);
+
+  public async update(userId: string, dto: IUser): Promise<IUser> {
+    return await User.findByIdAndUpdate(userId, dto, { new: true });
+  }
+
+  public async delete(userId: string): Promise<void> {
+    await User.deleteOne({ _id: userId });
   }
 }
 
