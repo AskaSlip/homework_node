@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
+import { ObjectSchema } from "joi";
 import { isObjectIdOrHexString } from "mongoose";
 
 import { ApiError } from "../errors/api.errors";
-import { schema } from "../services/user.validator";
 
 class CommonMiddleware {
   public isIdValid(key: string) {
@@ -18,18 +18,20 @@ class CommonMiddleware {
     };
   }
 
-  public isBodyValid(req: Request, res: Response, next: NextFunction) {
-    const { error } = schema.validate(req.body, { abortEarly: false });
-
-    if (error) {
-      return next(
-        new ApiError(
-          error.details.map((detail) => detail.message).toString(),
-          400,
-        ),
-      );
-    }
-    next();
+  public isBodyValid(validator: ObjectSchema) {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      try {
+        req.body = await validator.validateAsync(req.body);
+        next();
+      } catch (e) {
+        next(
+          new ApiError(
+            e.details.map((detail) => detail.message).toString(),
+            400,
+          ),
+        );
+      }
+    };
   }
 }
 
