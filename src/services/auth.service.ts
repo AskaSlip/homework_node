@@ -1,8 +1,10 @@
+import { EmailTypeEnum } from "../emuns/email-type.enum";
 import { ApiError } from "../errors/api.errors";
 import { ITokenPair, ITokenPayload } from "../interfaces/token.interface";
 import { ISignIn, IUser } from "../interfaces/user.interface";
 import { tokenRepository } from "../repositories/token.repository";
 import { userRepository } from "../repositories/user.repository";
+import { emailService } from "./email.service";
 import { passwordService } from "./password.service";
 import { tokenService } from "./token.service";
 
@@ -19,6 +21,16 @@ class AuthService {
       role: user.role,
     });
     await tokenRepository.create({ ...tokens, _userId: user._id });
+
+    await emailService.sendMail(
+      "varenaska@gmail.com",
+      EmailTypeEnum.FORGOT_PASSWORD,
+      {
+        email: user.name,
+        name: user.name,
+      },
+    );
+
     return { user, tokens };
   }
   public async signIn(
@@ -49,7 +61,7 @@ class AuthService {
     refreshToken: string,
     payload: ITokenPayload,
   ): Promise<ITokenPair> {
-    await tokenRepository.deleteByParams({ refreshToken });
+    await tokenRepository.deleteOneByParams({ refreshToken });
     const tokens = tokenService.generateTokens({
       userId: payload.userId,
       role: payload.role,
@@ -63,6 +75,27 @@ class AuthService {
     if (user) {
       throw new ApiError("Email already exists", 409);
     }
+  }
+
+  public async logout(
+    tokenId: string,
+    jwtPayload: ITokenPayload,
+  ): Promise<void> {
+    const user = await userRepository.getById(jwtPayload.userId);
+    await tokenRepository.deleteOneByParams({ _id: tokenId });
+
+    await emailService.sendMail("varenaska@gmail.com", EmailTypeEnum.LOGOUT, {
+      name: user.name,
+    });
+  }
+
+  public async logoutAll(jwtPayload: ITokenPayload): Promise<void> {
+    const user = await userRepository.getById(jwtPayload.userId);
+    await tokenRepository.deleteManyByParams({ _userId: jwtPayload.userId });
+    await emailService.sendMail(user.email, EmailTypeEnum.LOGOUT_ALL, {
+      name: user.name,
+      email: user.email,
+    });
   }
 }
 export const authService = new AuthService();

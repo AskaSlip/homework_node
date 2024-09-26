@@ -50,4 +50,8 @@ export class UserValidator {
     age: this.age.required(),
     phone: this.phone,
   });
+  public static signIn = Joi.object({
+    email: this.email.required(),
+    password: this.password.required(),
+  });
 }
