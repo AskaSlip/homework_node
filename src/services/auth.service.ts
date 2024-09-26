@@ -1,7 +1,14 @@
+import { ActionTokenTypeEnum } from "../emuns/action-token-type.enum";
 import { EmailTypeEnum } from "../emuns/email-type.enum";
 import { ApiError } from "../errors/api.errors";
 import { ITokenPair, ITokenPayload } from "../interfaces/token.interface";
-import { ISignIn, IUser } from "../interfaces/user.interface";
+import {
+  IResetPasswordSend,
+  IResetPasswordSet,
+  ISignIn,
+  IUser,
+} from "../interfaces/user.interface";
+import { actionTokenRepository } from "../repositories/action-token.repository";
 import { tokenRepository } from "../repositories/token.repository";
 import { userRepository } from "../repositories/user.repository";
 import { emailService } from "./email.service";
@@ -22,17 +29,14 @@ class AuthService {
     });
     await tokenRepository.create({ ...tokens, _userId: user._id });
 
-    await emailService.sendMail(
-      "varenaska@gmail.com",
-      EmailTypeEnum.FORGOT_PASSWORD,
-      {
-        email: user.name,
-        name: user.name,
-      },
-    );
+    await emailService.sendMail("varenaska@gmail.com", EmailTypeEnum.WELCOME, {
+      email: user.name,
+      name: user.name,
+    });
 
     return { user, tokens };
   }
+
   public async signIn(
     dto: ISignIn,
   ): Promise<{ user: IUser; tokens: ITokenPair }> {
@@ -96,6 +100,47 @@ class AuthService {
       name: user.name,
       email: user.email,
     });
+  }
+
+  public async forgotPasswordSendEmail(dto: IResetPasswordSend): Promise<void> {
+    const user = await userRepository.getByEmail(dto.email);
+    if (!user) {
+      throw new ApiError("User not found", 409);
+    }
+
+    const token = await tokenService.generateActionTokens(
+      { userId: user._id, role: user.role },
+      ActionTokenTypeEnum.FORGOT_PASSWORD,
+    );
+    await actionTokenRepository.create({
+      token,
+      type: ActionTokenTypeEnum.FORGOT_PASSWORD,
+      _userId: user._id,
+    });
+
+    await emailService.sendMail(
+      "varenaska@gmail.com",
+      EmailTypeEnum.FORGOT_PASSWORD,
+      {
+        email: user.email,
+        name: user.name,
+        actionToken: token,
+      },
+    );
+  }
+
+  public async forgotPasswordSet(
+    dto: IResetPasswordSet,
+    jwtPayload: ITokenPayload,
+  ): Promise<void> {
+    const password = await passwordService.hashPassword(dto.password);
+    await userRepository.update(jwtPayload.userId, { password });
+
+    await actionTokenRepository.deleteManyByParams({
+      _userId: jwtPayload.userId,
+      type: ActionTokenTypeEnum.FORGOT_PASSWORD,
+    });
+    await tokenRepository.deleteManyByParams({ _userId: jwtPayload.userId });
   }
 }
 export const authService = new AuthService();
