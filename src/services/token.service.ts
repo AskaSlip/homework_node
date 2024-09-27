@@ -21,7 +21,10 @@ class TokenService {
     return { accessToken, refreshToken };
   }
 
-  public verifyToken(token: string, type: TokenTypeEnum): ITokenPayload {
+  public verifyToken(
+    token: string,
+    type: TokenTypeEnum | ActionTokenTypeEnum,
+  ): ITokenPayload {
     try {
       let secret: string;
 
@@ -32,10 +35,19 @@ class TokenService {
         case TokenTypeEnum.REFRESH:
           secret = configs.JWT_REFRESH_SECRET;
           break;
+        case ActionTokenTypeEnum.FORGOT_PASSWORD:
+          secret = configs.ACTION_FORGOT_PASSWORD_SECRET;
+          break;
+        case ActionTokenTypeEnum.VERIFY_EMAIL:
+          secret = configs.ACTION_VERIFY_EMAIL_SECRET;
+          break;
+        default:
+          throw new ApiError("Invalid token type :(", 400);
       }
       return jsonwebtoken.verify(token, secret) as ITokenPayload;
     } catch (e) {
-      throw new ApiError(e.message, 401);
+      console.error(e.message);
+      throw new ApiError("Invalid token", 401);
     }
   }
 
@@ -51,31 +63,15 @@ class TokenService {
         secret = configs.ACTION_FORGOT_PASSWORD_SECRET;
         expiresIn = configs.ACTION_FORGOT_PASSWORD_EXPIRATION;
         break;
+      case ActionTokenTypeEnum.VERIFY_EMAIL:
+        secret = configs.ACTION_VERIFY_EMAIL_SECRET;
+        expiresIn = configs.ACTION_VERIFY_EMAIL_EXPIRATION;
+        break;
       default:
-        throw new ApiError("Invalid token type", 400);
+        throw new ApiError("Invalid token type! ", 400);
     }
 
     return jsonwebtoken.sign(payload, secret, { expiresIn });
-  }
-
-  public verifyActionToken(
-    token: string,
-    type: ActionTokenTypeEnum,
-  ): ITokenPayload {
-    try {
-      let secret: string;
-
-      switch (type) {
-        case ActionTokenTypeEnum.FORGOT_PASSWORD:
-          secret = configs.ACTION_FORGOT_PASSWORD_SECRET;
-          break;
-        default:
-          throw new ApiError("Invalid token type", 400);
-      }
-      return jsonwebtoken.verify(token, secret) as ITokenPayload;
-    } catch (e) {
-      throw new ApiError(e.message, 401);
-    }
   }
 }
 

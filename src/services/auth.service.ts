@@ -29,9 +29,20 @@ class AuthService {
     });
     await tokenRepository.create({ ...tokens, _userId: user._id });
 
+    const token = tokenService.generateActionTokens(
+      { userId: user._id, role: user.role },
+      ActionTokenTypeEnum.VERIFY_EMAIL,
+    );
+    await actionTokenRepository.create({
+      type: ActionTokenTypeEnum.VERIFY_EMAIL,
+      _userId: user._id,
+      token,
+    });
+
     await emailService.sendMail("varenaska@gmail.com", EmailTypeEnum.WELCOME, {
       email: user.name,
       name: user.name,
+      actionToken: token,
     });
 
     return { user, tokens };
@@ -108,14 +119,14 @@ class AuthService {
       throw new ApiError("User not found", 409);
     }
 
-    const token = await tokenService.generateActionTokens(
+    const token = tokenService.generateActionTokens(
       { userId: user._id, role: user.role },
       ActionTokenTypeEnum.FORGOT_PASSWORD,
     );
     await actionTokenRepository.create({
-      token,
       type: ActionTokenTypeEnum.FORGOT_PASSWORD,
       _userId: user._id,
+      token,
     });
 
     await emailService.sendMail(
@@ -134,13 +145,22 @@ class AuthService {
     jwtPayload: ITokenPayload,
   ): Promise<void> {
     const password = await passwordService.hashPassword(dto.password);
-    await userRepository.update(jwtPayload.userId, { password });
+    await userRepository.updateById(jwtPayload.userId, { password });
 
     await actionTokenRepository.deleteManyByParams({
       _userId: jwtPayload.userId,
       type: ActionTokenTypeEnum.FORGOT_PASSWORD,
     });
     await tokenRepository.deleteManyByParams({ _userId: jwtPayload.userId });
+  }
+
+  public async verify(jwtPayload: ITokenPayload): Promise<void> {
+    await userRepository.updateById(jwtPayload.userId, { isVerified: true });
+
+    await actionTokenRepository.deleteManyByParams({
+      _userId: jwtPayload.userId,
+      type: ActionTokenTypeEnum.VERIFY_EMAIL,
+    });
   }
 }
 export const authService = new AuthService();
