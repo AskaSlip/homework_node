@@ -1,8 +1,10 @@
+import { FileItemTypeEnum } from "../emuns/file-item-type.enum";
 import { ApiError } from "../errors/api.errors";
 import { ITokenPayload } from "../interfaces/token.interface";
 import { IUser } from "../interfaces/user.interface";
 import { userRepository } from "../repositories/user.repository";
 import { passwordService } from "./password.service";
+import { s3Service } from "./s3.service";
 
 class UserService {
   public async getList(): Promise<IUser[]> {
@@ -34,8 +36,41 @@ class UserService {
   public async updateMe(jwtPayload: ITokenPayload, dto: IUser): Promise<IUser> {
     return await userRepository.updateById(jwtPayload.userId, dto);
   }
+
   public async deleteMe(jwtPayload: ITokenPayload): Promise<void> {
     return await userRepository.delete(jwtPayload.userId);
+  }
+
+  public async uploadAvatar(
+    jwtPayload: ITokenPayload,
+    file: any,
+  ): Promise<IUser> {
+    const user = await userRepository.getById(jwtPayload.userId);
+
+    const avatar = await s3Service.uploadFile(
+      file,
+      FileItemTypeEnum.USER,
+      user._id,
+    );
+    console.log(avatar);
+    const updatedUser = await userRepository.updateById(jwtPayload.userId, {
+      avatar,
+    });
+    if (user.avatar) {
+      await s3Service.deleteFile(user.avatar);
+    }
+    return updatedUser;
+  }
+
+  public async deleteAvatar(jwtPayload: ITokenPayload): Promise<IUser> {
+    const user = await userRepository.getById(jwtPayload.userId);
+
+    if (user.avatar) {
+      await s3Service.deleteFile(user.avatar);
+    }
+    return await userRepository.updateById(jwtPayload.userId, {
+      avatar: null,
+    });
   }
 
   private async isEmailExistOrThrow(email: string): Promise<void> {

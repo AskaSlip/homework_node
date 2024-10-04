@@ -12,6 +12,7 @@ export interface IUser {
   isDeleted: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  avatar?: string;
 }
 
 export type ISignIn = Pick<IUser, "email" | "password">;
