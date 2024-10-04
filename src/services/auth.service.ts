@@ -41,7 +41,7 @@ class AuthService {
       token,
     });
 
-    await emailService.sendMail("varenaska@gmail.com", EmailTypeEnum.WELCOME, {
+    await emailService.sendMail(user.email, EmailTypeEnum.WELCOME, {
       email: user.name,
       name: user.name,
       actionToken: token,
@@ -101,7 +101,7 @@ class AuthService {
     const user = await userRepository.getById(jwtPayload.userId);
     await tokenRepository.deleteOneByParams({ _id: tokenId });
 
-    await emailService.sendMail("varenaska@gmail.com", EmailTypeEnum.LOGOUT, {
+    await emailService.sendMail(user.email, EmailTypeEnum.LOGOUT, {
       name: user.name,
     });
   }
@@ -131,15 +131,11 @@ class AuthService {
       token,
     });
 
-    await emailService.sendMail(
-      "varenaska@gmail.com",
-      EmailTypeEnum.FORGOT_PASSWORD,
-      {
-        email: user.email,
-        name: user.name,
-        actionToken: token,
-      },
-    );
+    await emailService.sendMail(user.email, EmailTypeEnum.FORGOT_PASSWORD, {
+      email: user.email,
+      name: user.name,
+      actionToken: token,
+    });
   }
 
   public async forgotPasswordSet(
