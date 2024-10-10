@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { rateLimit } from "express-rate-limit";
 
 import { avatarConfig } from "../constants/image.constants";
 import { userController } from "../controllers/user.controller";
@@ -9,14 +10,18 @@ import { UserValidator } from "../services/user.validator";
 
 const router = Router();
 
-router.get("/", userController.getList);
-// router.post(
-//   "/",
-//   commonMiddleware.isBodyValid(UserValidator.create),
-//   userController.create,
-// );
+router.get(
+  "/",
+  commonMiddleware.isQueryValid(UserValidator.listQuery),
+  userController.getList,
+);
 
-router.get("/me", authMiddleware.checkAccessToken, userController.getMe);
+router.get(
+  "/me",
+  rateLimit({ windowMs: 2 * 60 * 1000, limit: 50 }),
+  authMiddleware.checkAccessToken,
+  userController.getMe,
+);
 router.put(
   "/me",
   authMiddleware.checkAccessToken,
