@@ -1,4 +1,4 @@
-import { RoleEnum } from "../emuns/user.enum";
+import { RoleEnum } from "../enums/user.enum";
 
 export interface IToken {
   _id?: string;

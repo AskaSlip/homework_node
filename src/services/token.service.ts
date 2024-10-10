@@ -1,8 +1,8 @@
 import * as jsonwebtoken from "jsonwebtoken";
 
 import { configs } from "../config/configs";
-import { ActionTokenTypeEnum } from "../emuns/action-token-type.enum";
-import { TokenTypeEnum } from "../emuns/token-type.enum";
+import { ActionTokenTypeEnum } from "../enums/action-token-type.enum";
+import { TokenTypeEnum } from "../enums/token-type.enum";
 import { ApiError } from "../errors/api.errors";
 import { ITokenPair, ITokenPayload } from "../interfaces/token.interface";
 

@@ -1,8 +1,8 @@
 import { configs } from "../config/configs";
-import { IUser } from "../interfaces/user.interface";
+import { IUser, IUserListQuery } from "../interfaces/user.interface";
 
 class UserPresenter {
-  toPublicResDto(entity: IUser) {
+  public toPublicResDto(entity: IUser) {
     return {
       _id: entity._id,
       name: entity.name,
@@ -14,6 +14,15 @@ class UserPresenter {
         : null,
       isVerified: entity.isVerified,
       isDeleted: entity.isDeleted,
+      createdAt: entity.createdAt,
+    };
+  }
+
+  public toListResDto(entities: IUser[], total: number, query: IUserListQuery) {
+    return {
+      data: entities.map(this.toPublicResDto),
+      total,
+      ...query,
     };
   }
 }
