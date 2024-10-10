@@ -1,5 +1,5 @@
-import { ActionTokenTypeEnum } from "../emuns/action-token-type.enum";
-import { EmailTypeEnum } from "../emuns/email-type.enum";
+import { ActionTokenTypeEnum } from "../enums/action-token-type.enum";
+import { EmailTypeEnum } from "../enums/email-type.enum";
 import { ApiError } from "../errors/api.errors";
 import { ITokenPair, ITokenPayload } from "../interfaces/token.interface";
 import {

@@ -1,4 +1,4 @@
-import { EmailTypeEnum } from "../emuns/email-type.enum";
+import { EmailTypeEnum } from "../enums/email-type.enum";
 import { EmailPayloadCombined } from "./email-payload-combined.type";
 import { PickRequired } from "./pick-required-type";
 

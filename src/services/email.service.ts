@@ -4,7 +4,7 @@ import path from "path";
 
 import { configs } from "../config/configs";
 import { emailConstants } from "../constants/email.constants";
-import { EmailTypeEnum } from "../emuns/email-type.enum";
+import { EmailTypeEnum } from "../enums/email-type.enum";
 import { EmailTypeToPayload } from "../types/email.type-to-payload.type";
 
 class EmailService {
