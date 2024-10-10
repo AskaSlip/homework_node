@@ -1,6 +1,6 @@
 import { CronJob } from "cron";
 
-import { EmailTypeEnum } from "../emuns/email-type.enum";
+import { EmailTypeEnum } from "../enums/email-type.enum";
 import { timeHelper } from "../helpers/time.helper";
 import { userRepository } from "../repositories/user.repository";
 import { emailService } from "../services/email.service";
